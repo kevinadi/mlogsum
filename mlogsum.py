@@ -11,24 +11,25 @@ from pprint import pprint
 def process_log(fileobj, filename):
 
     regexes = [
-        {'regex': re.compile('^\s*([0-9]{4}-[0-9]{2}-[0-9]{2}T\S+)'), 'name': 'log start time', 'type': 'root'},
-        {'regex': re.compile('^\s*([0-9]{4}-[0-9]{2}-[0-9]{2}T\S+)'), 'name': 'log end time', 'type': 'timestamp'},
-        {'regex': re.compile('port=([0-9]+)\s'), 'name': 'port', 'type': 'root'},
-        {'regex': re.compile('host=(.*)$'), 'name': 'host', 'type': 'root'},
-        {'regex': re.compile('\[initandlisten\] db version (v.*)$'), 'name': 'version', 'type': 'root'},
-        {'regex': re.compile('serverStatus was very slow'), 'name': 'serverStatus was very slow', 'type': 'counter'},
-        {'regex': re.compile('SERVER RESTARTED'), 'name': 'server restarted', 'type': 'counter'},
-        {'regex': re.compile('COLLSCAN'), 'name': 'collscan', 'type': 'counter'},
-        {'regex': re.compile('Starting an election'), 'name': 'election', 'type': 'counter'},
-        {'regex': re.compile(' F '), 'name': 'fatal events', 'type': 'counter'},
-        {'regex': re.compile(' E '), 'name': 'error events', 'type': 'counter'},
-        {'regex': re.compile(' W '), 'name': 'warning events', 'type': 'counter'},
-        {'regex': re.compile('build index on'), 'name': 'index build', 'type': 'counter'},
-        {'regex': re.compile('op_query [1-9]+[0-9]{3}ms$'), 'name': 'ops > 1000ms', 'type': 'counter'},
-        {'regex': re.compile('COMMAND .* replSetStepDown'), 'name': 'replSetStepDown', 'type': 'counter'},
-        {'regex': re.compile('step down because I have higher priority'), 'name': 'priority takeover', 'type': 'counter'},
-        {'regex': re.compile('\*\*\*aborting after invariant\(\) failure'), 'name': 'invariant failure', 'type': 'counter'},
-        {'regex': re.compile('Detected unclean shutdown'), 'name': 'unclean shutdown', 'type': 'counter'}
+        {'regex': re.compile('^\s*([0-9]{4}-[0-9]{2}-[0-9]{2}T\S+)'), 'name': 'log start time', 'type': ['root']},
+        {'regex': re.compile('^\s*([0-9]{4}-[0-9]{2}-[0-9]{2}T\S+)'), 'name': 'log end time', 'type': ['timestamp']},
+        {'regex': re.compile('port=([0-9]+)\s'), 'name': 'port', 'type': ['root']},
+        {'regex': re.compile('host=(.*)$'), 'name': 'host', 'type': ['root']},
+        {'regex': re.compile('\[initandlisten\] db version (v.*)$'), 'name': 'version', 'type': ['root']},
+        {'regex': re.compile('New replica set config in use: (.*)$'), 'name': 'replset reconfig', 'type': ['counter']},
+        {'regex': re.compile('serverStatus was very slow'), 'name': 'serverStatus was very slow', 'type': ['counter']},
+        {'regex': re.compile('SERVER RESTARTED'), 'name': 'server restarted', 'type': ['counter']},
+        {'regex': re.compile('COLLSCAN'), 'name': 'collscan', 'type': ['counter']},
+        {'regex': re.compile('Starting an election'), 'name': 'election', 'type': ['counter']},
+        {'regex': re.compile(' F '), 'name': 'fatal events', 'type': ['counter']},
+        {'regex': re.compile(' E '), 'name': 'error events', 'type': ['counter']},
+        {'regex': re.compile(' W '), 'name': 'warning events', 'type': ['counter']},
+        {'regex': re.compile('build index on'), 'name': 'index build', 'type': ['counter']},
+        {'regex': re.compile('op_query [1-9]+[0-9]{3}ms$'), 'name': 'ops > 1000ms', 'type': ['counter']},
+        {'regex': re.compile('COMMAND .* replSetStepDown'), 'name': 'replSetStepDown', 'type': ['counter']},
+        {'regex': re.compile('step down because I have higher priority'), 'name': 'priority takeover', 'type': ['counter']},
+        {'regex': re.compile('\*\*\*aborting after invariant\(\) failure'), 'name': 'invariant failure', 'type': ['counter']},
+        {'regex': re.compile('Detected unclean shutdown'), 'name': 'unclean shutdown', 'type': ['counter']}
     ]
 
     output = {'counters': {}}
@@ -39,14 +40,14 @@ def process_log(fileobj, filename):
         for item in regexes:
             match = item['regex'].search(line)
             if match:
-                if item['type'] == 'root':
+                if 'root' in item['type']:
                     regexes.remove(item)
                     output[item['name']] = match.group(1)
 
-                if item['type'] == 'timestamp':
+                if 'timestamp' in item['type']:
                     output[item['name']] = match.group(1)
 
-                if item['type'] == 'counter':
+                if 'counter' in item['type']:
                     if not output['counters'].get(item['name']):
                         output['counters'][item['name']] = 1
                     else:
